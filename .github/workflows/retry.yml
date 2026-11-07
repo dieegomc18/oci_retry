@@ -1,12 +1,9 @@
 name: Oracle Always Free retry
+permissions: write-all
 on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
-permissions:
-  contents: read
-  issues: write
-  actions: write
 jobs:
   retry:
     runs-on: ubuntu-latest
