@@ -1,0 +1,36 @@
+name: Oracle Always Free retry
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+  actions: write
+concurrency:
+  group: oci-retry
+  cancel-in-progress: false
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decrypt OCI credentials
+        env:
+          OCI_PASS: ${{ secrets.OCI_PASS }}
+        run: |
+          mkdir -p ~/.oci
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:OCI_PASS -in oci-bundle.enc | tar xzf - -C ~/.oci
+          chmod 600 ~/.oci/api_key.pem ~/.oci/config
+      - run: pip install -q oci
+      - id: try
+        run: python3 retry.py
+      - name: Notify and stop
+        if: steps.try.outputs.result == 'success' || steps.try.outputs.result == 'exists'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHAPE: ${{ steps.try.outputs.shape }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Oracle: VM hermes creada" --body "Resultado: ${{ steps.try.outputs.result }} ${SHAPE}. Avisa a Hark para instalar Hermes."
+          gh workflow disable retry.yml --repo "$GITHUB_REPOSITORY"
