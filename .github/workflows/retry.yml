@@ -7,15 +7,15 @@ permissions:
   contents: read
   issues: write
   actions: write
-concurrency:
-  group: oci-retry
-  cancel-in-progress: false
 jobs:
   retry:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - uses: actions/checkout@v4
+      - name: Get repo files
+        env:
+          TOKEN: ${{ github.token }}
+        run: git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
       - name: Decrypt OCI credentials
         env:
           OCI_PASS: ${{ secrets.OCI_PASS }}
