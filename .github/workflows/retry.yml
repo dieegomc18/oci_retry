@@ -2,7 +2,7 @@ name: Oracle Always Free retry
 permissions: write-all
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 jobs:
   retry:
